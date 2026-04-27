@@ -471,6 +471,109 @@ class CompanyScraper:
             return base.rstrip("/")[:-6] + "/posts/"
         return base.rstrip("/") + "/posts/"
 
+    def _to_people_url(self, linkedin_url: str, keywords: Optional[str] = None) -> str:
+        """Build the company's /people/ URL, optionally with a keyword filter."""
+        base = (linkedin_url or "").strip()
+        m = re.search(
+            r"(https?://www\.linkedin\.com/company/[^/?#]+)",
+            base,
+            flags=re.IGNORECASE,
+        )
+        root = m.group(1) if m else base.rstrip("/").split("?")[0]
+        url = f"{root.rstrip('/')}/people/"
+        if keywords:
+            url += f"?keywords={keywords}"
+        return url
+
+    async def find_founder_url(
+        self,
+        linkedin_url: str,
+        timeout_ms: int = 60000,
+    ) -> Optional[str]:
+        """
+        Search the company's /people/ tab for someone whose title matches
+        founder/CEO patterns and return their profile URL (None if not found).
+        """
+        founder_re = re.compile(
+            r"\b(co[-\s]?founder|founding\s+\w+|founder|chief\s+executive(?:\s+officer)?|\bceo\b)\b",
+            flags=re.IGNORECASE,
+        )
+
+        # Try the keyword-filtered people page first, then the plain /people/ as fallback.
+        candidate_urls = [
+            self._to_people_url(linkedin_url, keywords="founder"),
+            self._to_people_url(linkedin_url, keywords="ceo"),
+            self._to_people_url(linkedin_url),
+        ]
+
+        for people_url in candidate_urls:
+            logger.info("Looking for founder at: %s", people_url)
+            try:
+                await self.page.goto(
+                    people_url, wait_until="domcontentloaded", timeout=timeout_ms
+                )
+                await self._human_pause(800, 1800)
+                await detect_rate_limit(self.page)
+            except Exception as exc:
+                logger.warning("Could not open %s: %s", people_url, exc)
+                continue
+
+            # Nudge the page to render lazy-loaded results.
+            try:
+                await self.page.mouse.wheel(0, 1500)
+                await self._human_pause(500, 1000)
+                await self.page.mouse.wheel(0, 1500)
+                await self._human_pause(500, 1000)
+            except Exception:
+                pass
+
+            card_selectors = [
+                "div.org-people-profile-card",
+                "ul.org-people-profiles-module__profile-list > li",
+                "main ul li:has(a[href*='/in/'])",
+            ]
+
+            cards: list = []
+            for sel in card_selectors:
+                loc = self.page.locator(sel)
+                try:
+                    count = await loc.count()
+                except Exception:
+                    count = 0
+                if count > 0:
+                    cards = await loc.all()
+                    break
+
+            if not cards:
+                continue
+
+            for card in cards:
+                try:
+                    text = (await card.inner_text()).strip()
+                except Exception:
+                    continue
+                if not text or not founder_re.search(text):
+                    continue
+
+                link = card.locator('a[href*="/in/"]').first
+                try:
+                    if await link.count() == 0:
+                        continue
+                    href = await link.get_attribute("href")
+                except Exception:
+                    continue
+                if not href:
+                    continue
+
+                # Normalize to a clean profile URL (no query / overlays).
+                profile_url = href.split("?")[0].split("#")[0].rstrip("/")
+                if "/in/" not in profile_url:
+                    continue
+                logger.info("Found candidate founder: %s", profile_url)
+                return profile_url + "/"
+
+        return None
+
     def _post_identity(self, post: CompanyPost) -> str:
         content_key = (post.content or "")[:120].strip().lower()
         posted_key = (post.posted_at or "").strip().lower()

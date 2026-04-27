@@ -6,12 +6,18 @@ from pathlib import Path
 
 from company_scraper.browser import BrowserManager
 from company_scraper.company import CompanyScraper
-from company_scraper.models import Company
+from company_scraper.models import Company, Person
+from company_scraper.person import PersonScraper
 
 logging.basicConfig(level=logging.INFO)
 
 COMPANY_URL_RE = re.compile(
     r"^(?:https?://)?(?:[a-z0-9-]+\.)?linkedin\.com/company/([^/?#]+)",
+    flags=re.IGNORECASE,
+)
+
+PROFILE_URL_RE = re.compile(
+    r"^(?:https?://)?(?:[a-z0-9-]+\.)?linkedin\.com/in/([^/?#]+)",
     flags=re.IGNORECASE,
 )
 
@@ -58,6 +64,22 @@ def normalize_company_url(raw_url: str, section: str = "about") -> str:
     return f"https://www.linkedin.com/company/{slug}/{sec}/"
 
 
+def normalize_profile_url(raw_url: str) -> str:
+    """Normalize a LinkedIn profile URL to `https://www.linkedin.com/in/<slug>/`."""
+    url = (raw_url or "").strip()
+    if not url:
+        raise ValueError("Please enter a LinkedIn profile URL.")
+
+    m = PROFILE_URL_RE.search(url)
+    if not m:
+        raise ValueError(
+            "URL does not look like a LinkedIn profile "
+            "(expected linkedin.com/in/<slug>)."
+        )
+    slug = m.group(1).strip().strip("/")
+    return f"https://www.linkedin.com/in/{slug}/"
+
+
 def has_useful_company_data(company: Company) -> bool:
     """Treat scrape as successful only if at least one meaningful field is present."""
     return any([
@@ -76,6 +98,48 @@ def save_json(obj_dict: dict, out_dir: Path, filename: str) -> Path:
     with path.open("w", encoding="utf-8") as f:
         json.dump(obj_dict, f, ensure_ascii=False, indent=2)
     return path
+
+
+async def scrape_founder(
+    company_scraper: CompanyScraper,
+    page,
+    company_url: str,
+) -> tuple[Person, str] | None:
+    """
+    Try to auto-detect the founder from the company's /people/ tab and scrape
+    their profile. If auto-detect fails, prompt the user for a profile URL.
+    Returns (Person, profile_url) or None if the user skips.
+    """
+    founder_url = None
+    try:
+        founder_url = await company_scraper.find_founder_url(company_url)
+    except Exception as exc:
+        logging.warning("Founder auto-detect failed: %s", exc)
+
+    if founder_url:
+        print(f"✓ Auto-detected founder profile: {founder_url}")
+    else:
+        print("Could not auto-detect a founder from the company's People tab.")
+        manual = input(
+            "Paste the founder's LinkedIn profile URL (or press Enter to skip): "
+        ).strip()
+        if not manual:
+            return None
+        try:
+            founder_url = normalize_profile_url(manual)
+        except ValueError as exc:
+            print(f"✗ {exc}")
+            return None
+
+    person_scraper = PersonScraper(page)
+    print(f"Scraping founder profile: {founder_url}")
+    try:
+        person = await person_scraper.scrape(founder_url)
+    except Exception as exc:
+        logging.warning("Failed to scrape founder profile %s: %s", founder_url, exc)
+        return None
+
+    return person, founder_url
 
 
 async def main():
@@ -107,6 +171,21 @@ async def main():
         company_path = save_json(company.to_dict(), out_dir, safe_name)
         print(f"✓ Scraped company: {company_name}")
         print(f"✓ Saved to: {company_path}")
+
+        founder_result = await scrape_founder(scraper, browser.page, company_url)
+        if founder_result is None:
+            print("⚠ Skipped founder scrape.")
+            return
+
+        person, founder_url = founder_result
+        person_name = person.name or "founder"
+        founder_path = save_json(
+            person.to_dict(),
+            out_dir,
+            f"{safe_name}__founder_{safe_filename(person_name)}",
+        )
+        print(f"✓ Scraped founder: {person_name} ({founder_url})")
+        print(f"✓ Saved to: {founder_path}")
 
 
 if __name__ == "__main__":
