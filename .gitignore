@@ -1,4 +1,5 @@
 output/
+dom_dumps/
 /linkedin_session.json
 __pycache__/
 *.pyc

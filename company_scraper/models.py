@@ -46,15 +46,22 @@ class Contact(BaseModel):
     label: Optional[str] = None
 
 
+class PersonPost(BaseModel):
+    posted_at: Optional[str] = None
+    content: Optional[str] = None
+
+
 class Person(BaseModel):
     linkedin_url: str
     name: Optional[str] = None
     location: Optional[str] = None
     open_to_work: bool = False
+    about: Optional[str] = None
     experiences: List[Experience] = Field(default_factory=list)
     educations: List[Education] = Field(default_factory=list)
     accomplishments: List[Accomplishment] = Field(default_factory=list)
     contacts: List[Contact] = Field(default_factory=list)
+    posts: List[PersonPost] = Field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()

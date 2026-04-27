@@ -8,6 +8,7 @@ from .models import (
     Education,
     Experience,
     Person,
+    PersonPost,
 )
 from .person import PersonScraper
 
@@ -22,4 +23,5 @@ __all__ = [
     "Education",
     "Accomplishment",
     "Contact",
+    "PersonPost",
 ]

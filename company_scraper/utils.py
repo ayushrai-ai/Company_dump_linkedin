@@ -84,7 +84,7 @@ async def is_logged_in(page: Page) -> bool:
         if any(b in url for b in blockers):
             return False
 
-        # nav hints (LinkedIn changes often; keep broad)
+        # nav hints
         sel = 'nav a[href*="/feed"], nav a[href*="/mynetwork"], nav button:has-text("Home")'
         return await page.locator(sel).count() > 0 or any(x in url for x in ["/feed", "/mynetwork", "/notifications", "/messaging"])
     except Exception:
