@@ -10,6 +10,7 @@ from playwright.async_api import Page
 from .base import BaseScraper
 from .exceptions import ScraperError
 from .models import Accomplishment, Contact, Education, Experience, Person, PersonPost
+from .models import Accomplishment, Contact, Education, Experience, Person, PersonPost
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,8 @@ class PersonScraper(BaseScraper):
             await self.human_browse_noise()
 
             name = await self._get_name()
+            headline = await self._get_headline(name)
+            followers = await self._get_followers()
             location = await self._get_location()
             open_to_work = await self._check_open_to_work()
             headline = await self._get_headline(name)
@@ -65,8 +68,15 @@ class PersonScraper(BaseScraper):
             logger.info("Got %d honors", len(honors))
             await self.human_browse_noise()
 
+            honors = await self._get_honors(linkedin_url)
+            logger.info("Got %d honors", len(honors))
+            await self.human_browse_noise()
+
             contacts = await self._get_contacts(linkedin_url)
             logger.info("Got %d contacts", len(contacts))
+
+            posts = await self._get_posts(linkedin_url)
+            logger.info("Got %d posts", len(posts))
 
             posts = await self._get_posts(linkedin_url)
             logger.info("Got %d posts", len(posts))
@@ -74,6 +84,8 @@ class PersonScraper(BaseScraper):
             return Person(
                 linkedin_url=linkedin_url,
                 name=name,
+                headline=headline,
+                followers=followers,
                 location=location,
                 open_to_work=open_to_work,
                 headline=headline,
@@ -82,7 +94,9 @@ class PersonScraper(BaseScraper):
                 experiences=experiences,
                 educations=educations,
                 accomplishments=honors,
+                accomplishments=honors,
                 contacts=contacts,
+                posts=posts,
                 posts=posts,
             )
 
@@ -129,6 +143,34 @@ class PersonScraper(BaseScraper):
                 return text
         except Exception as exc:
             logger.debug("location extraction failed: %s", exc)
+        return None
+
+    async def _get_headline(self, name: Optional[str]) -> Optional[str]:
+        try:
+            if not name:
+                return None
+            safe = name.replace('"', "'")
+            el = self.page.locator(
+                f'xpath=//main//p[normalize-space()="{safe}"]/following-sibling::div[1]//p[1]'
+            ).first
+            if await el.count() > 0:
+                return _clean_text(await el.text_content()) or None
+        except Exception as exc:
+            logger.debug("headline extraction failed: %s", exc)
+        return None
+
+    async def _get_followers(self) -> Optional[str]:
+        try:
+            el = self.page.locator("main p").filter(
+                has_text=re.compile(r"\d.*followers", re.IGNORECASE)
+            ).first
+            if await el.count() > 0:
+                text = _clean_text(await el.text_content())
+                m = re.search(r"([\d,]+)\s*followers", text, re.IGNORECASE)
+                if m:
+                    return m.group(1)
+        except Exception as exc:
+            logger.debug("followers extraction failed: %s", exc)
         return None
 
     async def _get_headline(self, name: Optional[str]) -> Optional[str]:
