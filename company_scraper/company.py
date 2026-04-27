@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any, List
 
 from playwright.async_api import Page
 
-from .models import Company, CompanyPost
+from .models import Company, CompanyPerson, CompanyPost
 from .exceptions import AuthenticationError
 from .utils import detect_rate_limit, is_logged_in, extract_text_safe
 
@@ -484,6 +484,79 @@ class CompanyScraper:
         if keywords:
             url += f"?keywords={keywords}"
         return url
+
+    async def get_people(self, linkedin_url: str, timeout_ms: int = 60000) -> List[CompanyPerson]:
+        people_url = self._to_people_url(linkedin_url)
+        seen: set[str] = set()
+        people: List[CompanyPerson] = []
+
+        try:
+            await self.page.goto(people_url, wait_until="domcontentloaded", timeout=timeout_ms)
+            await self._human_pause(800, 1800)
+            await detect_rate_limit(self.page)
+        except Exception as exc:
+            logger.warning("Could not open people page: %s", exc)
+            return people
+
+        page_num = 1
+        while True:
+            # Wait for cards to render on current pagination page
+            try:
+                await self.page.wait_for_selector('main a[href*="/in/"]', timeout=15000)
+            except Exception:
+                logger.warning("People cards did not render on page %d", page_num)
+
+            # Click "Show more results" until exhausted on this pagination page
+            for _ in range(20):
+                btn = self.page.locator('button.scaffold-finite-scroll__load-button')
+                try:
+                    if await btn.count() == 0:
+                        break
+                    await btn.first.scroll_into_view_if_needed()
+                    await self._human_pause(800, 1500)
+                    await btn.first.click()
+                    await self._human_pause(1500, 2500)
+                except Exception:
+                    break
+
+            # Collect all visible people
+            anchors = await self.page.locator('main a[href*="/in/"]').all()
+            for anchor in anchors:
+                try:
+                    href = (await anchor.get_attribute("href") or "").split("?")[0].rstrip("/") + "/"
+                    if "/in/" not in href or href in seen:
+                        continue
+                    label = (await anchor.get_attribute("aria-label") or "").strip()
+                    text = (await anchor.text_content() or "").strip()
+                    if not label and not text:
+                        continue
+                    seen.add(href)
+                    parent = anchor.locator("xpath=ancestor::li[1]")
+                    if await parent.count() == 0:
+                        parent = anchor.locator("xpath=ancestor::div[3]")
+                    lines = [l.strip() for l in (await parent.inner_text()).splitlines() if l.strip()]
+                    name = lines[0] if lines else (label or text or None)
+                    title = lines[1] if len(lines) > 1 else None
+                    people.append(CompanyPerson(name=name, title=title, linkedin_url=href))
+                except Exception as exc:
+                    logger.debug("person parse error: %s", exc)
+
+            logger.info("Page %d: collected %d people so far", page_num, len(people))
+
+            # Navigate to next pagination page
+            page_num += 1
+            next_btn = self.page.locator(f'button[aria-label="Page {page_num}"]')
+            try:
+                if await next_btn.count() == 0:
+                    break
+                await next_btn.scroll_into_view_if_needed()
+                await self._human_pause(800, 1500)
+                await next_btn.click()
+                await self._human_pause(1500, 2500)
+            except Exception:
+                break
+
+        return people
 
     async def find_founder_url(
         self,

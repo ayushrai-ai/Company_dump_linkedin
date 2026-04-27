@@ -155,6 +155,14 @@ async def main():
         print(f"✓ Scraped company: {company_name}")
         print(f"✓ Saved to: {company_path}")
 
+        people = await scraper.get_people(company_url)
+        people_path = save_json(
+            [p.model_dump() for p in people],
+            out_dir,
+            f"{safe_name}__people",
+        )
+        print(f"✓ Scraped {len(people)} people → {people_path}")
+
         founder_result = await scrape_founder(browser.page)
         if founder_result is None:
             print("⚠ Skipped founder scrape.")

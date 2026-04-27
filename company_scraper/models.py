@@ -4,6 +4,12 @@ from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field, field_validator
 
 
+class CompanyPerson(BaseModel):
+    name: Optional[str] = None
+    title: Optional[str] = None
+    linkedin_url: Optional[str] = None
+
+
 class CompanyPost(BaseModel):
     posted_at: Optional[str] = None
     content: Optional[str] = None
