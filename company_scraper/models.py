@@ -57,6 +57,8 @@ class Person(BaseModel):
     location: Optional[str] = None
     open_to_work: bool = False
     about: Optional[str] = None
+    headline: Optional[str] = None
+    followers: Optional[str] = None
     experiences: List[Experience] = Field(default_factory=list)
     educations: List[Education] = Field(default_factory=list)
     accomplishments: List[Accomplishment] = Field(default_factory=list)
