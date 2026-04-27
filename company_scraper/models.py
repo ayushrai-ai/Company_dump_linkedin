@@ -11,6 +11,58 @@ class CompanyPost(BaseModel):
     comments: Optional[int] = None
 
 
+class Experience(BaseModel):
+    position_title: Optional[str] = None
+    institution_name: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    from_date: Optional[str] = None
+    to_date: Optional[str] = None
+    duration: Optional[str] = None
+    location: Optional[str] = None
+    description: Optional[str] = None
+
+
+class Education(BaseModel):
+    institution_name: Optional[str] = None
+    degree: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    from_date: Optional[str] = None
+    to_date: Optional[str] = None
+    description: Optional[str] = None
+
+
+class Accomplishment(BaseModel):
+    category: str
+    title: str
+    issuer: Optional[str] = None
+    issued_date: Optional[str] = None
+    credential_id: Optional[str] = None
+    credential_url: Optional[str] = None
+
+
+class Contact(BaseModel):
+    type: str
+    value: str
+    label: Optional[str] = None
+
+
+class Person(BaseModel):
+    linkedin_url: str
+    name: Optional[str] = None
+    location: Optional[str] = None
+    open_to_work: bool = False
+    experiences: List[Experience] = Field(default_factory=list)
+    educations: List[Education] = Field(default_factory=list)
+    accomplishments: List[Accomplishment] = Field(default_factory=list)
+    contacts: List[Contact] = Field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return self.model_dump()
+
+    def to_json(self, **kwargs) -> str:
+        return self.model_dump_json(**kwargs)
+
+
 class Company(BaseModel):
     linkedin_url: str
     name: Optional[str] = None
