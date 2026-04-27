@@ -134,14 +134,13 @@ class PersonScraper(BaseScraper):
 
     async def _get_headline(self, name: Optional[str]) -> Optional[str]:
         try:
-            if not name:
-                return None
-            safe = name.replace('"', "'")
-            el = self.page.locator(
-                f'xpath=//main//p[normalize-space()="{safe}"]/following-sibling::div[1]//p[1]'
-            ).first
-            if await el.count() > 0:
-                return _clean_text(await el.text_content()) or None
+            ps = await self.page.locator("main p").all()
+            for p in ps:
+                txt = _clean_text(await p.text_content())
+                if not txt or txt == name:
+                    continue
+                if len(txt) > 15 and not txt[0].isdigit():
+                    return txt
         except Exception as exc:
             logger.debug("headline extraction failed: %s", exc)
         return None
