@@ -1,0 +1,106 @@
+{
+  "linkedin_url": "https://www.linkedin.com/in/vivek-raghavan-16005424/",
+  "name": "Vivek Raghavan",
+  "headline": "Building Full Stack GenAI",
+  "followers": "6,908",
+  "location": "Bengaluru, Karnataka, India",
+  "open_to_work": false,
+  "about": "Dr. Vivek Raghavan is an entrepreneur, technologist and creator of Digital Public Goods (DPG). He has embarked on a mission as the founder of Sarvam AI to develop full stack Generative AI solutions for India. Dr. Raghavan co-founded Sarvam because of his belief that Generative AI has potential to impact the lives of all Indians.\n\nAs Chief AI Evangelist at the EkStep foundation, Vivek was an advisor to Digital India Bhashini (National Language Translation Mission) which aims to make available all services and information to citizens in their local language. Vivek was also Chief Mentor for the Nilekani Center at AI4Bharat, IIT Madras whose aim is to achieve English equivalence in language AI for all Indian languages through open datasets, models and applications.\n\nVivek was the Chief Product Manager and Biometric Architect at the Unique Identification Authority of India (UIDAI). He has been responsible for the design, implementation and scale out of the technology platform for Aadhaar, the world’s largest identity program as a volunteer. He joined the Aadhaar project just when the first Aadhaar was issued, and was there when the billionth Aadhaar was generated. Vivek pioneered the use of AI at Aadhaar to improve the quality of services and detect identity fraud.\n\nVivek was a member of the AI committee of the Supreme Court of India where he was responsible for the rollout of SUVAS (Supreme Court Vidhik Anuvaad Software) for translating judgements and orders into Indian languages.  Vivek has also worked on AI models for Fraud Detection in GSTN and has advised the National Payment Corporation of India. Vivek was a contributor to Data Empowerment and Protection Architecture (DEPA) framework.\n\nVivek served as volunteer CTO for Team Indus, India's entry to the Google Lunar X- Prize, which aimed to land a spacecraft on the surface of the moon.\n\nVivek spent 20 years in the field of Electronic Design Automation (EDA), successfully founding, running and selling two EDA companies and being responsible for the design and development of multiple market leading EDA products. He has held senior management positions at Magma Design Automation, Synopsys and Avant! Corporation.\n\nVivek has an M.S. and Ph.D. in Electrical and Computer Engineering from Carnegie Mellon University and a B. Tech. from IIT Delhi",
+  "experiences": [
+    {
+      "position_title": "Co-Founder",
+      "institution_name": "Sarvam AI",
+      "linkedin_url": "https://www.linkedin.com/company/101315625/",
+      "from_date": "Aug 2023",
+      "to_date": "Present",
+      "duration": "2 yrs 9 mos",
+      "location": null,
+      "description": null
+    },
+    {
+      "position_title": "Unique Identification Authority of India (UIDAI)",
+      "institution_name": "11 yrs 8 mos",
+      "linkedin_url": "https://www.linkedin.com/company/1962692/",
+      "from_date": "Bengaluru, Karnataka, India",
+      "to_date": null,
+      "duration": null,
+      "location": "Advisor, Technology (Volunteer)",
+      "description": null
+    },
+    {
+      "position_title": "Chief AI Evangelist",
+      "institution_name": "EkStep Foundation",
+      "linkedin_url": "https://www.linkedin.com/company/13195476/",
+      "from_date": "Apr 2020",
+      "to_date": "Jul 2023",
+      "duration": "3 yrs 4 mos",
+      "location": "Bangalore Urban, Karnataka, India",
+      "description": null
+    },
+    {
+      "position_title": "Entreprenuer in  Residence",
+      "institution_name": "Khosla Labs",
+      "linkedin_url": "https://www.linkedin.com/company/2806099/",
+      "from_date": "Oct 2012",
+      "to_date": "Jun 2013",
+      "duration": "9 mos",
+      "location": null,
+      "description": null
+    },
+    {
+      "position_title": "Chief Biometric Architect (Volunteer)",
+      "institution_name": "UIDAI, Government of India",
+      "linkedin_url": "https://www.linkedin.com/company/1414218/",
+      "from_date": "Oct 2010",
+      "to_date": "Jun 2013",
+      "duration": "2 yrs 9 mos",
+      "location": null,
+      "description": null
+    },
+    {
+      "position_title": "Vice President, Product Development  &  Managing Director India",
+      "institution_name": "Magma Design Automation",
+      "linkedin_url": "https://www.linkedin.com/company/6084/",
+      "from_date": "Apr 2004",
+      "to_date": "May 2010",
+      "duration": "6 yrs 2 mos",
+      "location": null,
+      "description": null
+    }
+  ],
+  "educations": [
+    {
+      "institution_name": "Carnegie Mellon University",
+      "degree": "Ph.D, Electrical & Computer Engg.",
+      "linkedin_url": "https://www.linkedin.com/school/3147/",
+      "from_date": "1989",
+      "to_date": "1993",
+      "description": null
+    },
+    {
+      "institution_name": "Indian Institute of Technology, Delhi",
+      "degree": "B.Tech., Electrical Engineering",
+      "linkedin_url": "https://www.linkedin.com/school/157264/",
+      "from_date": "1985",
+      "to_date": "1989",
+      "description": null
+    }
+  ],
+  "accomplishments": [],
+  "contacts": [],
+  "posts": [
+    {
+      "posted_at": "1yr",
+      "content": "When we founded Sarvam, we did so with a clear mission to build GENAI for a Billion Indians.In a thriving democracy like India's, Generative AI can enable public leaders to establish a strong bi-directional connection with people across linguistic barriers, enabling leaders to speak to and receive insights from their constituents.Honored to have enabled this and thank you Abhishek Singh for facilitating this.Narendra Modi Ashwini Vaishnaw S Krishnan Aakrit Vaish"
+    },
+    {
+      "posted_at": "1yr",
+      "content": "Hi,Hey folks! We are looking for highly talented individuals to join our team at Sarvam. We’re hiring full-time and interns for Software Engineer and Applied AI roles. Please find more details here - https://lnkd.in/gZz74XzjAbout SarvamWe are a deep-tech company developing foundational models and enterprise AI solutions for India. We recently launched India's first audio LLM (Voice + Text) and one of the first text foundational models developed on Indian soil. We are also working with leading enterprise clients to help them deploy voice AI solutions. More about Sarvam: https://www.sarvam.ai/Pratyush Kumar Vivek Raghavanhashtag#Sarvamhashtag#AI"
+    },
+    {
+      "posted_at": "1yr",
+      "content": "🚀 Looking to hire Backend, DevOps, QA Engineers at Sarvam. We're a GenAI startup with a mission to build population-scale AI technology. 🚀 This is an interesting opportunity to build foundational systems & tooling across the stack. Backend - 2-3 years of relevant experience building APIs & Services (FastAPI, Redis, Postgres etc.). Familiarity with AI/ML tools/libraries is a good to haveDevOps - 2-3 years of relevant experience with IaaC (Terraform), Clouds (Azure / AWS / GCP), CI/CD pipelinesQA / SDET - 2-3 years of relevant experience with Automation frameworks, API testing, Regression testing, NFR testingIf interested, pls fill out: https://lnkd.in/ggyXW5uQMore about Sarvam:https://sarvam.ai/https://lnkd.in/g6g3n7eaSamir Seth , Vivek Raghavan , Pratyush Kumar , Saurabh Karn (Hiring)hashtag#hiring hashtag#GenAI hashtag#SWE hashtag#Devops hashtag#QA"
+    }
+  ],
+  "skills": []
+}

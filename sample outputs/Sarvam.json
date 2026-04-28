@@ -1,0 +1,47 @@
+{
+  "linkedin_url": "https://www.linkedin.com/company/sarvam-ai/about/",
+  "name": "Sarvam",
+  "tagline": "Building the full-stack for Generative AI",
+  "description": "At Sarvam, we're on a mission to build the bedrock of Sovereign AI for India. We’re working toward creating a sovereign AI ecosystem that empowers governments, enterprises, and nonprofits to use GenAI solutions. We are a full-stack Generative AI platform built with sovereign models that deeply understand India’s culture and diversity, enabling AI agents and applications tailored for the nation. Today, Sarvam is backed by top investors, including Lightspeed, Peak XV, and Khosla Ventures.\n\nIndus is live in beta. Try now: https://indus.sarvam.ai",
+  "website": "https://www.sarvam.ai",
+  "phone": null,
+  "headquarters": null,
+  "founded": null,
+  "industry": "Software Development",
+  "company_type": null,
+  "company_size": "51-200 employees",
+  "specialties": null,
+  "posts": [
+    {
+      "posted_at": "2d • \n \n2 days ago • Visible to anyone on or off LinkedIn",
+      "content": "At AWS Summit Bengaluru 2026, Pratyush Kumar spoke about what’s next for Sarvam, focusing on distribution at scale and making AI accessible to every citizen in India in a meaningful way. From foundation models trained from scratch to the full stack of how AI actually reaches people, the talk covered the bet we’ve taken and where we’re taking it next.\n\nSarvam was present at the Startup Zone, and the energy from developers and students was hard to miss. The push to build cutting-edge AI in India has never been stronger. We’re backing builders through our Startup Program with API credits, ready-to-use infrastructure, and hands-on support. The goal is to activate the ecosystem and empower builders to build with AI.\n\nApply to the program: https://lnkd.in/gva7jrGb",
+      "likes": 954,
+      "comments": 6
+    },
+    {
+      "posted_at": "2w • \n \n2 weeks ago • Visible to anyone on or off LinkedIn",
+      "content": "At GitHub Constellation, the Sarvam engineering team shared their journey scaling large language models from early pre-training to post-training a 105B Mixture-of-Experts model.\n\nIn the session, they covered key challenges across large-scale pretraining, reinforcement learning, and multimodal capabilities across vision and speech, with a focus on real engineering trade-offs and lessons learned.",
+      "likes": 637,
+      "comments": 13
+    },
+    {
+      "posted_at": "1w • \n \n1 week ago • Visible to anyone on or off LinkedIn",
+      "content": "We're open-sourcing two frameworks for evaluating Indian ASR, and a full guide on evaluation across 22 languages.\n\nWER (Word Error Rate) and CER (Character Error Rate) were built for languages like English. Indian languages behave differently. Formal and colloquial forms coexist. English words move fluidly between scripts.\n\nIn this guide, we introduce four complementary metrics LLM-WER, LLM-CER, Intent Score, and Entity Preservation Score. In combination they capture a more complete view of Indian ASR system performance.\n\nRead more: https://lnkd.in/gPd5CWsi\n\nBoth frameworks are available to use and build on for evaluating Indian ASR in real-world settings.\n\nOpen-source frameworks:\nLLM-WER/CER: https://lnkd.in/g-h3jn6n\nIntent + Entity Score: https://lnkd.in/g4GBkhg8",
+      "likes": 1608,
+      "comments": 26
+    },
+    {
+      "posted_at": "2mo • \n \n2 months ago • Visible to anyone on or off LinkedIn",
+      "content": "Yesterday, we released Sarvam 30B and Sarvam 105B. Built from scratch, both models leverage a Mixture of Experts (MoE) architecture, delivering stronger performance at scale while using compute more efficiently.\n\nSarvam 30B activates just 1B non-embedded parameters per token, so it runs far more efficiently while maintaining strong capability. It is ideal for real-time applications like conversational AI and high-throughput workflows where latency matters.\n\nSarvam 105B model follows the same MoE design, activating 9B parameters per token to combine large-scale capability with efficient execution. \nWith a 128K context window, it is built for more demanding tasks including complex reasoning, agentic task completion, tool use, coding, mathematics, and science. \n\nThis makes it well suited for enterprise and population-scale deployments that require deeper reasoning and structured problem solving. Both models will be released as open weights on Hugging Face soon. API access and dashboard support to follow.",
+      "likes": 2063,
+      "comments": 52
+    },
+    {
+      "posted_at": "2mo • \n \n2 months ago • Visible to anyone on or off LinkedIn",
+      "content": "Join us at Bharat Mandapam, Plenary Hall B, today at 12:30 PM for the big drop! \n\nPlease note that with the India AI Impact Summit witnessing a high volume of attendees, we recommend arriving by 11:30 AM to allow adequate time for security checks and entry formalities.",
+      "likes": 99,
+      "comments": null
+    }
+  ],
+  "extra": {}
+}
