@@ -4,6 +4,12 @@ from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field, field_validator
 
 
+class CompanyPerson(BaseModel):
+    name: Optional[str] = None
+    title: Optional[str] = None
+    linkedin_url: Optional[str] = None
+
+
 class CompanyPost(BaseModel):
     posted_at: Optional[str] = None
     content: Optional[str] = None
@@ -40,21 +46,37 @@ class Accomplishment(BaseModel):
     credential_url: Optional[str] = None
 
 
+class Skills(BaseModel):
+    name: str
+    associated_with: List[str] = Field(default_factory=list)
+    endorsements: Optional[str] = None
+
 class Contact(BaseModel):
     type: str
     value: str
     label: Optional[str] = None
 
 
+class PersonPost(BaseModel):
+    posted_at: Optional[str] = None
+    content: Optional[str] = None
+
+
+
 class Person(BaseModel):
     linkedin_url: str
     name: Optional[str] = None
+    headline: Optional[str] = None
+    followers: Optional[str] = None
     location: Optional[str] = None
     open_to_work: bool = False
+    about: Optional[str] = None
     experiences: List[Experience] = Field(default_factory=list)
     educations: List[Education] = Field(default_factory=list)
     accomplishments: List[Accomplishment] = Field(default_factory=list)
     contacts: List[Contact] = Field(default_factory=list)
+    posts: List[PersonPost] = Field(default_factory=list)
+    skills: List[Skills] = Field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()

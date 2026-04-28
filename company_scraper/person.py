@@ -1,4 +1,3 @@
-"""Person/Profile scraper for LinkedIn's modern (componentkey-based) layout."""
 
 from __future__ import annotations
 
@@ -10,13 +9,13 @@ from playwright.async_api import Page
 
 from .base import BaseScraper
 from .exceptions import ScraperError
-from .models import Accomplishment, Contact, Education, Experience, Person
+from .models import Accomplishment, Contact, Education, Experience, Person, PersonPost, Skills
 
 logger = logging.getLogger(__name__)
 
 _MIDDOT_RE = re.compile(r"[··]")
 _MORE_SUFFIX_RE = re.compile(r"[…\.]{1,3}\s*more\s*$", re.IGNORECASE)
-
+_ENDORSEMENT_RE = re.compile(r"^endorsed by|\d+\s*endorsement", re.IGNORECASE)
 
 def _clean_text(text: Optional[str]) -> str:
     if not text:
@@ -47,8 +46,11 @@ class PersonScraper(BaseScraper):
             await self.human_browse_noise()
 
             name = await self._get_name()
+            headline = await self._get_headline(name)
+            followers = await self._get_followers()
             location = await self._get_location()
             open_to_work = await self._check_open_to_work()
+            about = await self._get_about()
             logger.info("Got name: %s", name)
 
             experiences = await self._get_experiences(linkedin_url)
@@ -59,27 +61,42 @@ class PersonScraper(BaseScraper):
             logger.info("Got %d educations", len(educations))
             await self.human_browse_noise()
 
+            honors = await self._get_honors(linkedin_url)
+            logger.info("Got %d honors", len(honors))
+            await self.human_browse_noise()
+
             contacts = await self._get_contacts(linkedin_url)
             logger.info("Got %d contacts", len(contacts))
+
+            posts = await self._get_posts(linkedin_url)
+            logger.info("Got %d posts", len(posts))
+
+            skills = await self._get_skills(linkedin_url)
+            logger.info("Got %d skills",len(skills))
 
             return Person(
                 linkedin_url=linkedin_url,
                 name=name,
+                headline=headline,
+                followers=followers,
                 location=location,
                 open_to_work=open_to_work,
+                about=about,
                 experiences=experiences,
                 educations=educations,
-                accomplishments=[],
+                accomplishments=honors,
                 contacts=contacts,
+                posts=posts,
+                skills=skills,
             )
 
         except Exception as e:
             raise ScraperError(f"Failed to scrape person profile: {e}") from e
 
-    # ---------- header fields ----------
+    #  header fields 
 
     async def _get_name(self) -> Optional[str]:
-        # <title>Mamta Kumari | LinkedIn</title> — rock-solid across layouts.
+
         try:
             title = await self.page.title()
         except Exception:
@@ -99,8 +116,6 @@ class PersonScraper(BaseScraper):
         return None
 
     async def _get_location(self) -> Optional[str]:
-        # The "Contact info" link is a stable landmark; the location lives in the
-        # same parent block, as the first non-middot, non-"Contact info" <p>.
         try:
             contact_link = self.page.locator(
                 'main a[href*="/overlay/contact-info"]'
@@ -120,9 +135,35 @@ class PersonScraper(BaseScraper):
             logger.debug("location extraction failed: %s", exc)
         return None
 
+    async def _get_headline(self, name: Optional[str]) -> Optional[str]:
+        try:
+            ps = await self.page.locator("main p").all()
+            for p in ps:
+                txt = _clean_text(await p.text_content())
+                if not txt or txt == name:
+                    continue
+                if len(txt) > 15 and not txt[0].isdigit():
+                    return txt
+        except Exception as exc:
+            logger.debug("headline extraction failed: %s", exc)
+        return None
+
+    async def _get_followers(self) -> Optional[str]:
+        try:
+            el = self.page.locator("main p").filter(
+                has_text=re.compile(r"\d.*followers", re.IGNORECASE)
+            ).first
+            if await el.count() > 0:
+                text = _clean_text(await el.text_content())
+                m = re.search(r"([\d,]+)\s*followers", text, re.IGNORECASE)
+                if m:
+                    return m.group(1)
+        except Exception as exc:
+            logger.debug("followers extraction failed: %s", exc)
+        return None
+
     async def _check_open_to_work(self) -> bool:
         try:
-            # The open-to-work ring puts a title with "#OPEN_TO_WORK" on the avatar img.
             imgs = await self.page.locator("main img[title]").all()
             for img in imgs[:10]:
                 title = (await img.get_attribute("title")) or ""
@@ -132,7 +173,7 @@ class PersonScraper(BaseScraper):
             pass
         return False
 
-    # ---------- experience ----------
+    #  experience 
 
     async def _get_experiences(self, base_url: str) -> List[Experience]:
         url = base_url.rstrip("/") + "/details/experience/"
@@ -212,7 +253,7 @@ class PersonScraper(BaseScraper):
             logger.debug("parse_work_times error: %s", exc)
             return None, None, None
 
-    # ---------- education ----------
+    #  education 
 
     async def _get_educations(self, base_url: str) -> List[Education]:
         url = base_url.rstrip("/") + "/details/education/"
@@ -280,7 +321,7 @@ class PersonScraper(BaseScraper):
         to_date = parts[1].strip() if len(parts) > 1 else from_date
         return from_date or None, to_date or None
 
-    # ---------- contacts ----------
+    #  contacts 
 
     async def _get_contacts(self, base_url: str) -> List[Contact]:
         url = base_url.rstrip("/") + "/overlay/contact-info/"
@@ -339,11 +380,163 @@ class PersonScraper(BaseScraper):
             seen.add(key)
             unique.append(c)
 
-        # Suppress "section heading" variable — kept for future use if needed.
+        
         _ = sections
         return unique
 
-    # ---------- generic helpers ----------
+    #  about 
+
+    async def _get_about(self) -> Optional[str]:
+        try:
+            about_section = self.page.locator(
+                'main section'
+            ).filter(has=self.page.locator('h2:text("About")'))
+            if await about_section.count() == 0:
+                return None
+            span = about_section.locator('[data-testid="expandable-text-box"]').first
+            if await span.count() > 0:
+                return _clean_text(await span.text_content()) or None
+            # fallback: largest <span> in section
+            spans = await about_section.locator('span').all()
+            best = ""
+            for s in spans:
+                t = _clean_text(await s.text_content())
+                if len(t) > len(best):
+                    best = t
+            return best or None
+        except Exception as exc:
+            logger.debug("about extraction failed: %s", exc)
+        return None
+
+    #  honors 
+
+    async def _get_honors(self, base_url: str) -> List[Accomplishment]:
+        url = base_url.rstrip("/") + "/details/honors/"
+        honors: List[Accomplishment] = []
+        try:
+            await self.navigate_and_wait(url)
+            await self.page.wait_for_selector("main", timeout=10000)
+            await self.human_browse_noise()
+            await self.scroll_page_to_bottom(pause_time=0.6, max_scrolls=4)
+        except Exception as exc:
+            logger.warning("Could not open honors page: %s", exc)
+            return honors
+
+        items = await self._collect_entity_items()
+        for item in items:
+            try:
+                texts = await self._collect_item_p_texts(item)
+                if not texts:
+                    continue
+                honors.append(Accomplishment(
+                    category="honor",
+                    title=texts[0],
+                    issuer=texts[1] if len(texts) > 1 else None,
+                    issued_date=texts[2] if len(texts) > 2 else None,
+                ))
+            except Exception as exc:
+                logger.debug("honor parse error: %s", exc)
+        return honors
+
+    #  posts 
+
+    async def _get_posts(self, base_url: str) -> List[PersonPost]:
+        url = base_url.rstrip("/") + "/recent-activity/all/"
+        posts: List[PersonPost] = []
+        try:
+            await self.navigate_and_wait(url)
+            await self.page.wait_for_selector(
+                'ul.display-flex.flex-wrap.list-style-none.justify-center',
+                timeout=15000,
+            )
+            await self.human_browse_noise()
+        except Exception as exc:
+            logger.warning("Could not open activity page: %s", exc)
+            return posts
+
+        ul = self.page.locator(
+            'ul.display-flex.flex-wrap.list-style-none.justify-center'
+        ).first
+        if await ul.count() == 0:
+            return posts
+
+        lis = await ul.locator('li').all()
+        for li in lis:
+            try:
+                text_el = li.locator('[class*="__commentary"]').first
+                text = ""
+                if await text_el.count() > 0:
+                    text = _clean_text(await text_el.text_content())
+
+                time_el = li.locator('[class*="actor__sub-description"]').first
+                posted_at = ""
+                if await time_el.count() > 0:
+                    raw = _clean_text(await time_el.text_content())
+                    posted_at = raw.split("•")[0].strip()
+
+                if text:
+                    posts.append(PersonPost(content=text, posted_at=posted_at or None))
+                    if len(posts) >= 3:
+                        break
+            except Exception as exc:
+                logger.debug("post parse error: %s", exc)
+        return posts
+    
+    
+    async def _get_skills(self, base_url: str)->List[Skills]:
+        url = base_url.rstrip("/") + "/details/skills/"
+        skills: List[Skills] = []
+        try:
+            await self.navigate_and_wait(url)
+            await self.page.wait_for_selector("main", timeout=10000)
+            await self.human_browse_noise()
+            # Scroll until page height stops growing so all lazy-loaded skills render.
+            await self.scroll_page_to_bottom(pause_time=1.2, max_scrolls=30)
+            # Extra settle wait after reaching the true bottom.
+            await self.page.wait_for_timeout(1500)
+        except Exception as exc:
+            logger.warning("Couldnt Open Skill Section: %s",exc)
+            return skills
+        skill_sel = 'div[componentkey^="com.linkedin.sdui.profile.skill("]'
+        try:
+            await self.page.wait_for_selector(skill_sel, timeout=10000)
+        except Exception:
+            logger.warning("No skill elements appeared on the page")
+            return skills
+
+        items = await self.page.locator(f'main {skill_sel}').all()
+        logger.info("Found %d raw skill elements", len(items))
+
+        seen: set[str] = set()
+        for item in items:
+            try:
+                texts = await self._collect_item_p_texts(item)
+                if not texts:
+                    continue
+                name = texts[0]
+                if name in seen:
+                    continue
+                seen.add(name)
+                associated = []
+                endorsements = None
+                for t in texts[1:]:
+                    if _ENDORSEMENT_RE.search(t):
+                        if endorsements is None:
+                            endorsements = t
+                    else:
+                        associated.append(t)
+                skills.append(Skills(
+                    name=name,
+                    associated_with=associated,
+                    endorsements=endorsements,
+                ))
+            except Exception as exc:
+                logger.debug("skill parse error: %s", exc)
+        return skills
+
+
+
+    #  generic helpers 
 
     async def _collect_entity_items(self) -> list:
         """Find all `div[componentkey^="entity-collection-item"]` items in main."""
