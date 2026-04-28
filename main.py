@@ -102,17 +102,26 @@ def save_json(obj_dict: dict, out_dir: Path, filename: str) -> Path:
 
 async def scrape_founder(
     page,
+    company_url: str,
 ) -> tuple[Person, str] | None:
     manual = input(
-        "Paste the founder's LinkedIn profile URL (or press Enter to skip): "
+        "Paste the founder's LinkedIn profile URL (or press Enter to auto-detect): "
     ).strip()
-    if not manual:
-        return None
-    try:
-        founder_url = normalize_profile_url(manual)
-    except ValueError as exc:
-        print(f"✗ {exc}")
-        return None
+
+    if manual:
+        try:
+            founder_url = normalize_profile_url(manual)
+        except ValueError as exc:
+            print(f"✗ {exc}")
+            return None
+    else:
+        print("No URL given — searching the company's people tab for Founder / Co-Founder / CEO…")
+        company_scraper = CompanyScraper(page)
+        founder_url = await company_scraper.find_founder_url(company_url)
+        if not founder_url:
+            print("⚠ Could not auto-detect a founder/CEO from the people tab.")
+            return None
+        print(f"Auto-detected founder profile: {founder_url}")
 
     person_scraper = PersonScraper(page)
     print(f"Scraping founder profile: {founder_url}")
@@ -163,7 +172,7 @@ async def main():
         )
         print(f"✓ Scraped {len(people)} people → {people_path}")
 
-        founder_result = await scrape_founder(browser.page)
+        founder_result = await scrape_founder(browser.page, company_url)
         if founder_result is None:
             print("⚠ Skipped founder scrape.")
             return

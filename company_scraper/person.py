@@ -9,14 +9,13 @@ from playwright.async_api import Page
 
 from .base import BaseScraper
 from .exceptions import ScraperError
-from .models import Accomplishment, Contact, Education, Experience, Person, PersonPost
-from .models import Accomplishment, Contact, Education, Experience, Person, PersonPost
+from .models import Accomplishment, Contact, Education, Experience, Person, PersonPost, Skills
 
 logger = logging.getLogger(__name__)
 
 _MIDDOT_RE = re.compile(r"[··]")
 _MORE_SUFFIX_RE = re.compile(r"[…\.]{1,3}\s*more\s*$", re.IGNORECASE)
-
+_ENDORSEMENT_RE = re.compile(r"^endorsed by|\d+\s*endorsement", re.IGNORECASE)
 
 def _clean_text(text: Optional[str]) -> str:
     if not text:
@@ -72,6 +71,9 @@ class PersonScraper(BaseScraper):
             posts = await self._get_posts(linkedin_url)
             logger.info("Got %d posts", len(posts))
 
+            skills = await self._get_skills(linkedin_url)
+            logger.info("Got %d skills",len(skills))
+
             return Person(
                 linkedin_url=linkedin_url,
                 name=name,
@@ -85,6 +87,7 @@ class PersonScraper(BaseScraper):
                 accomplishments=honors,
                 contacts=contacts,
                 posts=posts,
+                skills=skills,
             )
 
         except Exception as e:
@@ -478,6 +481,60 @@ class PersonScraper(BaseScraper):
             except Exception as exc:
                 logger.debug("post parse error: %s", exc)
         return posts
+    
+    
+    async def _get_skills(self, base_url: str)->List[Skills]:
+        url = base_url.rstrip("/") + "/details/skills/"
+        skills: List[Skills] = []
+        try:
+            await self.navigate_and_wait(url)
+            await self.page.wait_for_selector("main", timeout=10000)
+            await self.human_browse_noise()
+            # Scroll until page height stops growing so all lazy-loaded skills render.
+            await self.scroll_page_to_bottom(pause_time=1.2, max_scrolls=30)
+            # Extra settle wait after reaching the true bottom.
+            await self.page.wait_for_timeout(1500)
+        except Exception as exc:
+            logger.warning("Couldnt Open Skill Section: %s",exc)
+            return skills
+        skill_sel = 'div[componentkey^="com.linkedin.sdui.profile.skill("]'
+        try:
+            await self.page.wait_for_selector(skill_sel, timeout=10000)
+        except Exception:
+            logger.warning("No skill elements appeared on the page")
+            return skills
+
+        items = await self.page.locator(f'main {skill_sel}').all()
+        logger.info("Found %d raw skill elements", len(items))
+
+        seen: set[str] = set()
+        for item in items:
+            try:
+                texts = await self._collect_item_p_texts(item)
+                if not texts:
+                    continue
+                name = texts[0]
+                if name in seen:
+                    continue
+                seen.add(name)
+                associated = []
+                endorsements = None
+                for t in texts[1:]:
+                    if _ENDORSEMENT_RE.search(t):
+                        if endorsements is None:
+                            endorsements = t
+                    else:
+                        associated.append(t)
+                skills.append(Skills(
+                    name=name,
+                    associated_with=associated,
+                    endorsements=endorsements,
+                ))
+            except Exception as exc:
+                logger.debug("skill parse error: %s", exc)
+        return skills
+
+
 
     #  generic helpers 
 

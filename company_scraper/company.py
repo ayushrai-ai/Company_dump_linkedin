@@ -572,10 +572,11 @@ class CompanyScraper:
             flags=re.IGNORECASE,
         )
 
-        # Try the keyword-filtered people page first, then the plain /people/ as fallback.
+        # Try each keyword-filtered people page in order, fall back to plain /people/.
         candidate_urls = [
             self._to_people_url(linkedin_url, keywords="founder"),
-            self._to_people_url(linkedin_url, keywords="ceo"),
+            self._to_people_url(linkedin_url, keywords="co-founder"),
+            self._to_people_url(linkedin_url, keywords="CEO"),
             self._to_people_url(linkedin_url),
         ]
 
